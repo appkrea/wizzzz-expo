@@ -12,11 +12,30 @@ const Stack = createStackNavigator();
 
 const App = () => (
   <AppProvider>
-    <StatusBar style="dark" />
+    <StatusBar style="light" />
     <NavigationContainer>
       <Stack.Navigator initialRouteName="Home">
-        <Stack.Screen name="Home" component={HomeScreen} />
-        <Stack.Screen name="Orders" component={OrderScreen} />
+        <Stack.Screen
+          options={{
+            title: 'Wizz',
+            headerStyle: {
+              backgroundColor: '#B81D26',
+            },
+            headerTintColor: 'whitesmoke',
+          }}
+          name="Home"
+          component={HomeScreen}
+        />
+        <Stack.Screen
+          options={{
+            title: 'Objednávka',
+            headerStyle: {
+              backgroundColor: '#B81D26',
+            },
+            headerTintColor: 'whitesmoke',
+          }} name="Order"
+          component={OrderScreen}
+        />
       </Stack.Navigator>
     </NavigationContainer>
   </AppProvider>
