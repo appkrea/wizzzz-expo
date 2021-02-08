@@ -1,5 +1,6 @@
 import React from 'react';
 import axios from 'axios';
+import * as Location from 'expo-location';
 
 export const AppContext = React.createContext();
 
@@ -12,11 +13,22 @@ class AppProvider extends React.Component {
       env: process.env.NODE_ENV,
       driver: 1,
       deliveries: null,
+      location: {},
     };
   }
 
   componentDidMount() {
     this.fetchDeliveries();
+    (async () => {
+      let { status } = await Location.requestPermissionsAsync();
+      if (status !== 'granted') {
+        console.log('NOT GRANTED');
+        return;
+      }
+
+      let location = await Location.getCurrentPositionAsync({});
+      console.log(location);
+    })();
   }
 
   fetchDeliveries() {

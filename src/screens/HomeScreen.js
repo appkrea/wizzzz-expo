@@ -21,7 +21,9 @@ const HomeScreen = ({ navigation }) => {
               data={app.state.deliveries[app.state.driver]}
               ItemSeparatorComponent={() => (<View style={styles.listSeparator} />)}
               renderItem={({ item }) => (
-                <TouchableHighlight>
+                <TouchableHighlight
+                  onPress={() => navigation.navigate('Order', { order: item })}
+                >
                   <View style={styles.orderItem}>
                     <Text style={[styles.orderItemText, styles.orderItemTextAddress]}>{item.address}</Text>
                     <Text style={[styles.orderItemText, styles.orderItemTextLocation]}>{item.location}</Text>
