@@ -1,6 +1,7 @@
-import React, { useContext, useEffect } from 'react';
-import { View, Text, StyleSheet, Dimensions } from 'react-native';
+import React, { useContext, useEffect, useState } from 'react';
+import { View, Text, StyleSheet, Dimensions, Image } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
+const carIcon = require('../images/car-icon.png');
 
 import { AppContext } from './../../providers/AppProvider';
 
@@ -11,27 +12,53 @@ const LATITUDE_DELTA = 0.0020; //Very high zoom level
 const LONGITUDE_DELTA = LATITUDE_DELTA * ASPECT_RATIO;
 
 const OrderScreen = ({ route, navigation }) => {
+  const [location, setLocation] = useState({
+    latitude: 50.20137449,
+    longitude: 15.83504256,
+    latitudeDelta: LATITUDE_DELTA,
+    longitudeDelta: LONGITUDE_DELTA,
+  });
+  const [heading, setHeading] = useState(0);
   const { order } = route.params;
-  console.log(order);
+
   useEffect(() => {
     navigation.setOptions({
       title: order.address,
     });
-  }, [])
+  }, []);
+
   const app = useContext(AppContext);
+
+  useEffect(() => {
+    if (app.state.location) {
+      console.log(app.state.location);
+      setLocation({
+        latitude: parseFloat(app.state.location.coords.latitude),
+        longitude: parseFloat(app.state.location.coords.longitude),
+        latitudeDelta: LATITUDE_DELTA,
+        longitudeDelta: LONGITUDE_DELTA,
+      });
+      setHeading(parseFloat(app.state.location.coords.heading));
+    }
+  }, [app.state.location])
+
   return (
     <View style={styles.container}>
       <MapView
         style={styles.map}
-        showsUserLocation={true}
-        initialRegion={{
-          latitude: order.coords.lat,
-          longitude: order.coords.lng,
-          latitudeDelta: LATITUDE_DELTA,
-          longitudeDelta: LONGITUDE_DELTA,
-        }}
+        showsTraffic={true}
+        // customMapStyle={map}
+        region={location}
+        initialRegion={location}
       >
         <Marker coordinate={{ latitude: order.coords.lat, longitude: order.coords.lng }} />
+        <Marker coordinate={location} rotation={heading}>
+                <Image
+                  source={carIcon}
+                  style={{ width: 50, height: 50 }}
+                  resizeMode="center"
+                />
+              </Marker>
       </MapView>
       <View style={styles.details}>
         <View style={styles.detailName}>
@@ -47,12 +74,12 @@ const OrderScreen = ({ route, navigation }) => {
         </View>
       </View>
       <View style={styles.detailProducts}>
-            {order.filteredProducts.medium > 0 ? <Text style={styles.detailProductsText}>{`${order.filteredProducts.medium}x STŘ`}</Text> : null}
-            {order.filteredProducts.large > 0 ? <Text style={styles.detailProductsText}>{`${order.filteredProducts.large}x VEL`}</Text> : null}
-            {order.filteredProducts.burgers > 0 ?<Text style={styles.detailProductsText}>{`${order.filteredProducts.burgers}x BURGER`}</Text> : null}
-            {order.filteredProducts.boxes > 0 ? <Text style={styles.detailProductsText}>{`${order.filteredProducts.boxes}x BOX`}</Text> : null}
-            {order.filteredProducts.drinks > 0 ? <Text style={styles.detailProductsText}>{`${order.filteredProducts.drinks}x PITÍ`}</Text> : null}
-        </View>
+        {order.filteredProducts.medium > 0 ? <Text style={styles.detailProductsText}>{`${order.filteredProducts.medium}x STŘ`}</Text> : null}
+        {order.filteredProducts.large > 0 ? <Text style={styles.detailProductsText}>{`${order.filteredProducts.large}x VEL`}</Text> : null}
+        {order.filteredProducts.burgers > 0 ? <Text style={styles.detailProductsText}>{`${order.filteredProducts.burgers}x BURGER`}</Text> : null}
+        {order.filteredProducts.boxes > 0 ? <Text style={styles.detailProductsText}>{`${order.filteredProducts.boxes}x BOX`}</Text> : null}
+        {order.filteredProducts.drinks > 0 ? <Text style={styles.detailProductsText}>{`${order.filteredProducts.drinks}x PITÍ`}</Text> : null}
+      </View>
       <View style={styles.note}>
         <Text numberOfLines={2} ellipsizeMode="tail" style={styles.noteText}>{order.note || 'Žádná poznámka'}</Text>
       </View>

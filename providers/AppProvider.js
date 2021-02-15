@@ -1,34 +1,66 @@
 import React from 'react';
 import axios from 'axios';
 import * as Location from 'expo-location';
+import * as Permissions from 'expo-permissions';
+import { io } from 'socket.io-client';
 
 export const AppContext = React.createContext();
 
-const endpoint = process.env.NODE_ENV === 'production' ? 'https://Www.wizzzz.cz' : 'http://192.168.8.184:1234';
+const endpoint = process.env.NODE_ENV === 'production' ? 'https://www.wizzzz.cz' : 'http://192.168.8.184:1234';
 
 class AppProvider extends React.Component {
+
   constructor(props) {
     super(props);
     this.state = {
       env: process.env.NODE_ENV,
       driver: 1,
       deliveries: null,
-      location: {},
+      location: undefined,
     };
   }
 
-  componentDidMount() {
-    this.fetchDeliveries();
-    (async () => {
-      let { status } = await Location.requestPermissionsAsync();
-      if (status !== 'granted') {
-        console.log('NOT GRANTED');
-        return;
-      }
+  async componentDidMount() {
+    let socket = io(endpoint, {
+      transports: ['websocket'],
+    });
 
-      let location = await Location.getCurrentPositionAsync({});
-      console.log(location);
-    })();
+    this.getLocationAsync();
+    this.fetchDeliveries();
+
+    socket.on('deliveries change', (deliveries) => {
+      this.setState((prevState) => ({
+        ...prevState,
+        deliveries,
+      }))
+  });
+  }
+
+   componentWillUnmount() {
+    this.location.remove();
+  }
+
+  getLocationAsync = async () => {
+    let { status } = await Permissions.askAsync(Permissions.LOCATION)
+    if (status !== 'granted') {
+      console.log('no geolocation premissions');
+    }
+    this.location = await Location.watchPositionAsync({
+      accuracy: Location.Accuracy.High,
+      timeInterval: 1,
+      distanceInterval: 1
+    }, (loc) => {
+      this.setState((prevState) => ({
+        ...prevState,
+        location: loc,
+      }), () => {
+        // console.log(this.state);
+      });
+      // console.log(loc);
+      /*axios.post(`https://www.wizzzz.cz/api/position/${this.state.driver}`, loc).then((res) => {
+        console.log(res);
+      });*/
+    });
   }
 
   fetchDeliveries() {

@@ -1,22 +1,50 @@
-import React, { useContext } from 'react';
-import { View, Button, Text, FlatList, StyleSheet, Dimensions, TouchableHighlight } from 'react-native';
+import React, { useContext, useEffect, useState } from 'react';
+import { View, Button, Text, FlatList, StyleSheet, Dimensions, TouchableHighlight, Image } from 'react-native';
+import MapView, { Marker, AnimatedRegion, Animated } from 'react-native-maps';
+const carIcon = require('../images/car-icon.png');
+// const map = require('./map.json');
 
 import { AppContext } from './../../providers/AppProvider';
 
 const { width } = Dimensions.get('window');
 
+const ASPECT_RATIO = width / 400;
+const LATITUDE_DELTA = 0.010;
+const LONGITUDE_DELTA = LATITUDE_DELTA * ASPECT_RATIO;
+
 const HomeScreen = ({ navigation }) => {
+  const [location, setLocation] = useState({
+    latitude: 50.20137449,
+    longitude: 15.83504256,
+    latitudeDelta: LATITUDE_DELTA,
+    longitudeDelta: LONGITUDE_DELTA,
+  });
+  const [heading, setHeading] = useState(0);
+
   const app = useContext(AppContext);
+
+  useEffect(() => {
+    if (app.state.location) {
+      console.log(app.state.location);
+      setLocation({
+        latitude: parseFloat(app.state.location.coords.latitude),
+        longitude: parseFloat(app.state.location.coords.longitude),
+        latitudeDelta: LATITUDE_DELTA,
+        longitudeDelta: LONGITUDE_DELTA,
+      });
+      setHeading(parseFloat(app.state.location.coords.heading));
+    }
+  }, [app.state.location])
   return (
     <View style={styles.container}>
+      <View style={styles.listHeader}>
+        <Text style={styles.listHeaderText}>
+          Řidič {app.state.driver}
+        </Text>
+      </View>
       {
         app.state.deliveries && app.state.deliveries[app.state.driver].length > 0 ? (
           <>
-            <View style={styles.listHeader}>
-              <Text style={styles.listHeaderText}>
-                Rozvozy pro řidiče {app.state.driver}
-              </Text>
-            </View>
             <FlatList
               data={app.state.deliveries[app.state.driver]}
               ItemSeparatorComponent={() => (<View style={styles.listSeparator} />)}
@@ -35,7 +63,24 @@ const HomeScreen = ({ navigation }) => {
               keyExtractor={item => item.id}
             />
           </>
-        ) : (<Text>Žádné objednávky</Text>)
+        ) : (
+            <Animated
+              style={styles.map}
+              showsTraffic={true}
+              // customMapStyle={map}
+              region={location}
+              initialRegion={location}
+            >
+              <Marker coordinate={{ latitude: 50.20137449, longitude: 15.83504256 }} />
+              <Marker coordinate={location} rotation={heading}>
+                <Image
+                  source={carIcon}
+                  style={{ width: 50, height: 50 }}
+                  resizeMode="center"
+                />
+              </Marker>
+            </Animated>
+          )
       }
     </View>
   );
@@ -47,6 +92,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: 'whitesmoke',
     width,
+  },
+  map: {
+    width,
+    height: 400,
   },
   listHeader: {
     padding: 20,
